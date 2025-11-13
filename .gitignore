@@ -1,1 +1,35 @@
+# Terraform
+.terraform
+*.tfstate*
+*.tfvars
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+crash.log
+crash.*.log
+override.tf*
+*_override.tf*
+.terraformrc
+terraform.rc
+builds/
+
+# Environment files
+.env*
+
+# Node / frontend
+node_modules/
+dist/
+build/
+coverage/
+
+# Python (if using for Lambda/local tools)
+venv/
+__pycache__/
+*.pyc
+
+# OS / Editor
 .DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
