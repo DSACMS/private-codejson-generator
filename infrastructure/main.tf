@@ -76,8 +76,8 @@ resource "aws_iam_policy" "lambda_dynamodb_policy" {
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_dynamodb_attach" {
-  role = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.lambda_dynamodb_policy.arn
+  role = aws_iam_role.lambda_role.id
+  policy_arn = aws_iam_policy.lambda_dynamodb_policy.id
 }
 
 
@@ -131,6 +131,7 @@ module "lambda_initiate_oauth" {
   runtime       = "python3.13"
   handler       = "initiate_oauth.lambda_handler"
   source_path   = "${path.module}/lambda/initiate_oauth"
+  create_role = false
   lambda_role   = aws_iam_role.lambda_role.arn
   publish       = true
 
@@ -167,6 +168,7 @@ module "lambda_oauth_callback" {
       pip_requirements = "${path.module}/lambda/oauth_callback/requirements.txt"
     }
   ]
+  create_role = false
   lambda_role   = aws_iam_role.lambda_role.arn
   publish       = true
 
@@ -207,6 +209,7 @@ module "lambda_get_repos" {
     }
   ]
 
+  create_role = false
   lambda_role = aws_iam_role.lambda_role.arn
   publish     = true
 
