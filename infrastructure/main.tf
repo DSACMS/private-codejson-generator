@@ -25,7 +25,7 @@ locals {
 }
 
 
-# Permissions and Policies
+# Roles and Policies
 resource "aws_iam_role" "lambda_role" {
   name                 = "${var.name}-${var.env}-role"
   path                 = "/delegatedadmin/developer/"
@@ -51,9 +51,8 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   policy_arn = "arn:aws-us-gov:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-resource "aws_iam_role_policy" "lambda_dynamodb_policy" { # allows our lambda modules to read/write to DynamoDB tables
+resource "aws_iam_policy" "lambda_dynamodb_policy" {
   name = "${var.name}-${var.env}-dynamodb_policy"
-  role = aws_iam_role.lambda_role.id
 
   policy =  jsonencode({
     Version = "2012-10-17"
@@ -73,6 +72,12 @@ resource "aws_iam_role_policy" "lambda_dynamodb_policy" { # allows our lambda mo
       }
     ]
   })
+  tags = local.tags
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_dynamodb_attach" {
+  role = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_dynamodb_policy.arn
 }
 
 
@@ -241,7 +246,7 @@ module "apigw" {
   stage_name         = "$default"
 
   routes = {
-    "POST /auth/initiate" = {
+    "GET /auth/initiate" = {
       integration = {
         uri                    = module.lambda_initiate_oauth.lambda_function_arn
         payload_format_version = "2.0" 

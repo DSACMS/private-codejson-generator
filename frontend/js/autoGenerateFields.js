@@ -1,6 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
     setupFormHandler();
     setupNotificationSystem();
+    initializeAuthUI();
+    handleOAuthCallback();
+    setupDropdownHandler();
 });
 
 // This works by creating an object with methods for different notification types of either error or success
@@ -17,9 +20,11 @@ const notificationSystem = {
 
         if (type === 'error') {
             notification.classList.add("usa-alert--error");
+            notification.classList.remove("usa-alert--success");
             notificationHeading.textContent = "Error";
         } else {
             notification.classList.add("usa-alert--success");
+            notification.classList.remove("usa-alert--error");
             notificationHeading.textContent = "Success";
         }
 
@@ -55,6 +60,281 @@ function setupNotificationSystem() {
         notification.style.opacity = '0';
         notification.style.transition = 'opacity 0.5s ease';
     }
+}
+
+
+// CONFIGURATION
+const API_CONFIG = {
+    BASE_URL: 'https://1qf9jjbd64.execute-api.us-gov-west-1.amazonaws.com',
+    ENDPOINTS: {
+        INITIATE: '/auth/initiate',
+        CALLBACK: '/auth/callback',
+        GET_REPOS: '/repos'
+    }
+};
+
+const AUTH_STORAGE_KEY = 'github_oauth_session';
+
+function getAuthToken() {
+    return localStorage.getItem(AUTH_STORAGE_KEY);
+}
+
+function setAuthToken(token) {
+    localStorage.setItem(AUTH_STORAGE_KEY, token);
+}
+
+function clearAuthToken() {
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+}
+
+function isAuthenticated() {
+    return !!getAuthToken();
+}
+
+
+// OAUTH FLOW HANDLING
+function handleOAuthCallback() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    const error = urlParams.get('error');
+
+    if (error) {
+        notificationSystem.error(`GitHub OAuth error: ${error}`);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return;
+    }
+
+    if (code && state) {
+        exchangeCodeForToken(code, state);
+    }
+}
+
+async function exchangeCodeForToken(code, state) {
+    try {
+        const callbackUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CALLBACK}?code=${code}&state=${state}`;
+        
+        const response = await fetch(callbackUrl);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to authenticate with GitHub');
+        }
+
+        if (data.sessionToken) {
+            setAuthToken(data.sessionToken);
+            notificationSystem.success('Successfully connected to GitHub!');
+            
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            initializeAuthUI();
+            await fetchUserRepositories();
+        } else {
+            throw new Error('No session token received from server');
+        }
+
+    } catch (error) {
+        console.error('OAuth callback error:', error);
+        notificationSystem.error(error.message);
+        
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+}
+
+function initiateGitHubOAuth() {
+    const initiateUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.INITIATE}`;
+    window.location.href = initiateUrl;
+}
+
+function disconnectGitHub() {
+    clearAuthToken();
+    notificationSystem.success('Disconnected from GitHub');
+    initializeAuthUI();
+}
+
+
+// REPOSITORY FETCHING
+async function fetchUserRepositories() {
+    const sessionToken = getAuthToken();
+    
+    if (!sessionToken) {
+        console.error('No session token available');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GET_REPOS}`, {
+            headers: {
+                'Authorization': `Bearer ${sessionToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch repositories');
+        }
+
+        const data = await response.json();
+        populateRepoDropdown(data.repositories || []);
+        
+    } catch (error) {
+        console.error('Error fetching repositories:', error);
+        notificationSystem.error('Failed to load repositories. Please try reconnecting.');
+    }
+}
+
+
+// UI STUFF
+function populateRepoDropdown(repositories) {
+    const dropdown = document.getElementById('repo-dropdown');
+    dropdown.innerHTML = '<option value="">Select a repository</option>';
+
+    repositories.forEach(repo => {
+        const option = document.createElement('option');
+        option.value = repo.html_url || repo.url;
+        option.textContent = repo.full_name || repo.name;
+        dropdown.appendChild(option);
+    });
+}
+
+function initializeAuthUI() {
+    const authContainer = document.getElementById('auth-status-container');
+    const publicForm = document.getElementById('github-url-form');
+    const privateSection = document.getElementById('private-repo-section');
+
+    if (isAuthenticated()) {
+        authContainer.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                <span style="color: #00a91c; font-weight: bold;">✓ Connected to GitHub</span>
+                <button class="usa-button usa-button--outline usa-button--inverse" 
+                        type="button" 
+                        onclick="disconnectGitHub()"
+                        style="padding: 5px 15px; font-size: 14px;">
+                    Disconnect
+                </button>
+            </div>
+            <p><i>Select a repository from your account</i></p>
+        `;
+        
+        privateSection.style.display = 'block';
+        publicForm.style.display = 'block';
+        
+        fetchUserRepositories();
+        
+    } else {
+        authContainer.innerHTML = `
+            <div style="margin-bottom: 15px;">
+                <button class="usa-button" type="button" onclick="initiateGitHubOAuth()">
+                    Connect GitHub Account
+                </button>
+                <p style="margin-top: 10px;"><i>Connect your GitHub account to access private repositories</i></p>
+            </div>
+        `;
+        
+        privateSection.style.display = 'none';
+        publicForm.style.display = 'block';
+    }
+}
+
+
+// API CALLS
+async function getRepoInformationAuth(repoInfo) {
+    const sessionToken = getAuthToken();
+    const baseURL = "https://api.github.com/repos/";
+    const endpoint = `${baseURL}${repoInfo.organization}/${repoInfo.repository}`;
+
+    try {
+        const headers = {
+            'Accept': 'application/vnd.github.v3+json'
+        };
+
+        if (sessionToken) {
+            headers['Authorization'] = `Bearer ${sessionToken}`;
+        }
+        
+        const response = await fetch(endpoint, { headers });
+
+        if (!response.ok) {
+            throw new Error(`GitHub API error (${response.status}): ${response.statusText}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error("Fetch error:", error.message);
+        throw error;
+    }
+}
+
+async function getRepoLanguagesAuth(repoInfo) {
+    const sessionToken = getAuthToken();
+    const endpoint = `https://api.github.com/repos/${repoInfo.organization}/${repoInfo.repository}/languages`;
+
+    try {
+        const headers = {
+            'Accept': 'application/vnd.github.v3+json'
+        };
+
+        if (sessionToken) {
+            headers['Authorization'] = `Bearer ${sessionToken}`;
+        }
+        
+        const response = await fetch(endpoint, { headers });
+
+        if (!response.ok) {
+            throw new Error(`GitHub API error (${response.status}): ${response.statusText}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error("Fetch error:", error.message);
+        throw error;
+    }
+}
+
+
+// FORM HANDLING
+function setupDropdownHandler() {
+    const dropdownButton = document.getElementById('repo-dropdown-button');
+    
+    dropdownButton.addEventListener('click', async function(event) {
+        event.preventDefault();
+        
+        const dropdown = document.getElementById('repo-dropdown');
+        const repoURL = dropdown.value;
+        
+        if (!repoURL) {
+            notificationSystem.error('Please select a repository');
+            return;
+        }
+        
+        dropdownButton.textContent = 'Loading...';
+        dropdownButton.disabled = true;
+        
+        try {
+            const repoInfo = extractGitHubInfo(repoURL);
+            
+            if (!repoInfo) {
+                throw new Error('Invalid repository selection');
+            }
+            
+            const repositoryInfo = await getRepoInformationAuth(repoInfo);
+            const languages = await getRepoLanguagesAuth(repoInfo);
+            
+            if (repositoryInfo) {
+                preFillFields(repositoryInfo, languages);
+                notificationSystem.success('Repository data loaded successfully!');
+            } else {
+                throw new Error('Could not fetch repository information');
+            }
+            
+        } catch (error) {
+            console.error(error.message);
+            notificationSystem.error(error.message);
+        } finally {
+            dropdownButton.textContent = 'Submit';
+            dropdownButton.disabled = false;
+        }
+    })
 }
 
 function setupFormHandler() {
@@ -101,6 +381,7 @@ function setupFormHandler() {
     });
 }
 
+// REPO INFO STUFF
 function extractGitHubInfo(url) {
     // Regex pattern to match GitHub URLs and extract org and repo
     const regex = /(?:https?:\/\/)?(?:www\.)?github\.com\/([^\/]+)\/([^\/\s]+)/;
@@ -330,3 +611,6 @@ window.showErrorNotification = function (message) {
 window.showSuccessNotification = function (message) {
     notificationSystem.success(message);
 };
+
+window.initiateGitHubOAuth = initiateGitHubOAuth;
+window.disconnectGitHub = disconnectGitHub;

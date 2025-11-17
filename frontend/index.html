@@ -211,7 +211,7 @@
 							name="exemption-condition" value="exemptByAgencySystem">
 						<label class="usa-checkbox__label" for="check-agency-systems">
 							Does sharing of the source code create an identifiable risk to the stability, security, or
-							integrity of the agency’s systems or personnel?
+							integrity of the agency's systems or personnel?
 						</label>
 					</div>
 					<div class="usa-checkbox">
@@ -275,11 +275,29 @@
 				fields in this form </h3>
 			<p><i>This currently only works on <b>public</b> repositories</i></p>
 		</div>
+
+		<!-- GitHub Authentication Section -->
+		<div id="github-auth-section" style="margin-bottom: 20px;">
+			<div id="auth-status-container">
+			</div>
+		</div>
+
+		<!-- Public Repository Form -->
 		<form id="github-url-form">
 			<label class="usa-label" for="repo-url">GitHub Repository URL</label>
+			<p><i>For <b>public</b> repositories, or enter URL manually</i></p>
 			<input class="usa-input" id="repo-url" name="repo-url" />
-			<button class="usa-button margin-top-2" id="repo-url-button">Submit</button>
+			<button class="usa-button margin-top-2" id="repo-url-button" type="submit">Submit</button>
 		</form>
+
+		<!-- Private Repository Dropdown -->
+		<div id="private-repo-section" style="display: none;">
+			<label class="usa-label" for="repo-dropdown">Select Repository</label>
+			<select class="usa-select" id="repo-dropdown" name="repo-dropdown">
+				<option value="">Select a repository</option>
+			</select>
+			<button class="usa-button margin-top-2" id="repo-dropdown-button" type="button">Submit</button>
+		</div>
 	</div>
 
 	<!-- Form header -->

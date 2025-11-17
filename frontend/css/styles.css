@@ -56,6 +56,22 @@ textarea {
     margin-top: 20px;
 }
 
+#github-auth-section {
+    padding: 10px 0;
+}
+
+#auth-status-container {
+    min-height: 40px;
+}
+
+#private-repo-section {
+    margin-top: 15px;
+}
+
+#repo-dropdown {
+    max-width: 600px;
+}
+
 @keyframes slideDown {
     from {
         opacity: 0;
