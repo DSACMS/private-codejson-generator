@@ -1,6 +1,6 @@
-# codejson-generator
+# private-codejson-generator
 
-Form to generate a CMS code.json
+Form to generate a CMS code.json with OAuth support to auto-generate from private repositories.
 
 https://dsacms.github.io/codejson-generator/
 
