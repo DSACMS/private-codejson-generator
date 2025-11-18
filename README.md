@@ -50,9 +50,12 @@ An up-to-date list of core team members can be found in [MAINTAINERS.md](MAINTAI
 
 ```
 .
-├── css
-├── js
-└── schemas
+├── frontend
+├──── css
+├──── js
+├──── schemas
+├── infrastructure
+├──── lambda
 ```
 
 # Development and Software Delivery Lifecycle
