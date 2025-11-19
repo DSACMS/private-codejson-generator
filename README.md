@@ -1,14 +1,10 @@
-# codejson-generator
+# private-codejson-generator
 
-Form to generate a CMS code.json
-
-https://dsacms.github.io/codejson-generator/
+Form to generate a CMS code.json with OAuth support to auto-generate from private repositories.
 
 ## About the Project
 
 A web form where project teams fill out information about their project and creates a completed code.json for local download to add to repositories. [Form.io](https://github.com/formio/uswds) is used for form generation.
-
-https://dsacms.github.io/codejson-generator/
 
 To produce the form, a JSON schema is ingested where it transforms each field to a Form.io component. At the moment, this is used for code.json, however this works for any JSON schema!
 
@@ -54,9 +50,12 @@ An up-to-date list of core team members can be found in [MAINTAINERS.md](MAINTAI
 
 ```
 .
-├── css
-├── js
-└── schemas
+├── frontend
+├──── css
+├──── js
+├──── schemas
+├── infrastructure
+├──── lambda
 ```
 
 # Development and Software Delivery Lifecycle
