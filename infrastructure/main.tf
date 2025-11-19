@@ -165,7 +165,6 @@ module "lambda_oauth_callback" {
   source_path   = [
     {
       path = "${path.module}/lambda/oauth_callback"
-      pip_requirements = "${path.module}/lambda/oauth_callback/requirements.txt"
     }
   ]
   create_role = false

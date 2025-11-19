@@ -1,11 +1,3 @@
-document.addEventListener("DOMContentLoaded", function () {
-    setupFormHandler();
-    setupNotificationSystem();
-    initializeAuthUI();
-    handleOAuthCallback();
-    setupDropdownHandler();
-});
-
 // This works by creating an object with methods for different notification types of either error or success
 // Calling either of these methods calls the main functionality, show(), which manipulates the notification element in HTML
 // The show() method changes the element based on type and displays the message to the user
@@ -93,51 +85,27 @@ function isAuthenticated() {
 
 
 // OAUTH FLOW HANDLING
-function handleOAuthCallback() {
+async function handleOAuthCallback() {
+    console.log('handleOAuthCallback called!');
+    console.log('Current URL:', window.location.href);
+
     const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    const state = urlParams.get('state');
-    const error = urlParams.get('error');
+    const sessionToken = urlParams.get('session');
+    console.log('Session token from URL:', sessionToken);
 
-    if (error) {
-        notificationSystem.error(`GitHub OAuth error: ${error}`);
-        window.history.replaceState({}, document.title, window.location.pathname);
-        return;
-    }
-
-    if (code && state) {
-        exchangeCodeForToken(code, state);
-    }
-}
-
-async function exchangeCodeForToken(code, state) {
     try {
-        const callbackUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CALLBACK}?code=${code}&state=${state}`;
-        
-        const response = await fetch(callbackUrl);
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || 'Failed to authenticate with GitHub');
-        }
-
-        if (data.sessionToken) {
-            setAuthToken(data.sessionToken);
+        if (sessionToken) {
+            setAuthToken(sessionToken);
             notificationSystem.success('Successfully connected to GitHub!');
             
             window.history.replaceState({}, document.title, window.location.pathname);
             
             initializeAuthUI();
             await fetchUserRepositories();
-        } else {
-            throw new Error('No session token received from server');
         }
-
     } catch (error) {
         console.error('OAuth callback error:', error);
         notificationSystem.error(error.message);
-        
-        window.history.replaceState({}, document.title, window.location.pathname);
     }
 }
 
@@ -614,3 +582,11 @@ window.showSuccessNotification = function (message) {
 
 window.initiateGitHubOAuth = initiateGitHubOAuth;
 window.disconnectGitHub = disconnectGitHub;
+
+document.addEventListener("DOMContentLoaded", function () {
+    setupFormHandler();
+    setupNotificationSystem();
+    initializeAuthUI();
+    handleOAuthCallback();
+    setupDropdownHandler();
+});
