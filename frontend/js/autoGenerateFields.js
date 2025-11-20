@@ -1,3 +1,5 @@
+let cachedRepositories = [];
+
 // This works by creating an object with methods for different notification types of either error or success
 // Calling either of these methods calls the main functionality, show(), which manipulates the notification element in HTML
 // The show() method changes the element based on type and displays the message to the user
@@ -86,20 +88,23 @@ function isAuthenticated() {
 
 // OAUTH FLOW HANDLING
 async function handleOAuthCallback() {
-    console.log('handleOAuthCallback called!');
-    console.log('Current URL:', window.location.href);
-
     const urlParams = new URLSearchParams(window.location.search);
     const sessionToken = urlParams.get('session');
+
     console.log('Session token from URL:', sessionToken);
 
     try {
         if (sessionToken) {
             setAuthToken(sessionToken);
             notificationSystem.success('Successfully connected to GitHub!');
-            
             window.history.replaceState({}, document.title, window.location.pathname);
             
+            initializeAuthUI();
+            await fetchUserRepositories();
+        } else if (getAuthToken()) {
+            console.log("getting auth token")
+            notificationSystem.success('Successfully connected to GitHub!');
+
             initializeAuthUI();
             await fetchUserRepositories();
         }
@@ -143,7 +148,9 @@ async function fetchUserRepositories() {
         }
 
         const data = await response.json();
-        populateRepoDropdown(data.repositories || []);
+        
+        cachedRepositories = data;
+        populateRepoDropdown(data);
         
     } catch (error) {
         console.error('Error fetching repositories:', error);
@@ -177,7 +184,7 @@ function initializeAuthUI() {
                 <button class="usa-button usa-button--outline usa-button--inverse" 
                         type="button" 
                         onclick="disconnectGitHub()"
-                        style="padding: 5px 15px; font-size: 14px;">
+                        style="padding: 5px 15px; font-size: 14px; background-color: red;">
                     Disconnect
                 </button>
             </div>
@@ -185,10 +192,7 @@ function initializeAuthUI() {
         `;
         
         privateSection.style.display = 'block';
-        publicForm.style.display = 'block';
-        
-        fetchUserRepositories();
-        
+        publicForm.style.display = 'none';
     } else {
         authContainer.innerHTML = `
             <div style="margin-bottom: 15px;">
@@ -279,21 +283,18 @@ function setupDropdownHandler() {
         dropdownButton.disabled = true;
         
         try {
-            const repoInfo = extractGitHubInfo(repoURL);
+            const selectedRepo = cachedRepositories.find(repo => 
+                (repo.html_url === repoURL || repo.url === repoURL)
+            );
             
-            if (!repoInfo) {
-                throw new Error('Invalid repository selection');
+            if (!selectedRepo) {
+                throw new Error('Repository not found in cached data');
             }
             
-            const repositoryInfo = await getRepoInformationAuth(repoInfo);
-            const languages = await getRepoLanguagesAuth(repoInfo);
+            const languages = selectedRepo.language ? { [selectedRepo.language]: 1 } : {};
             
-            if (repositoryInfo) {
-                preFillFields(repositoryInfo, languages);
-                notificationSystem.success('Repository data loaded successfully!');
-            } else {
-                throw new Error('Could not fetch repository information');
-            }
+            preFillFields(selectedRepo, languages);
+            notificationSystem.success('Repository data loaded successfully!');
             
         } catch (error) {
             console.error(error.message);

@@ -91,7 +91,7 @@ def error_response(message, status_code):
     error_url = f"{frontend_url}?error={message}"
     
     return {
-        'statusCode': 302,
+        'statusCode': status_code,
         'headers': {
             'Location': error_url
         },
