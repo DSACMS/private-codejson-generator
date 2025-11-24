@@ -240,7 +240,7 @@ module "apigw" {
   cors_configuration = {
     allow_headers = ["content-type", "x-amz-date", "authorization", "x-api-key", "x-amz-security-token", "x-amz-user-agent"]
     allow_methods = ["*"]
-    allow_origins = ["*"]
+    allow_origins = [var.frontend_url]
   }
 
   create_domain_name = false

@@ -71,7 +71,7 @@ def lambda_handler(event, context):
         )
         
         frontend_url = os.environ['FRONTEND_URL']
-        redirect_url = f"http://[::]:8000/?session={session_token}"
+        redirect_url = f"{frontend_url}?session={session_token}"
         
         return {
             'statusCode': 302,
