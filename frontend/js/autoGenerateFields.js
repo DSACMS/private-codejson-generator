@@ -68,7 +68,7 @@ const API_CONFIG = {
 };
 
 function isAuthenticated() {
-    return document.cookie.includes('authenticated=true');
+    return document.cookie.split('; ').some(cookie => cookie.startsWith('authenticated='));
 }
 
 
@@ -79,21 +79,31 @@ async function handleOAuthCallback() {
 
     if (error) {
         notificationSystem.error(`Authentication failed: ${error}`);
+        initializeAuthUI();
         return;
     }
 
     const justAuthenticated = document.referrer.includes('github.com');
     
     if (justAuthenticated) {
-        notificationSystem.success('Successfully connected to GitHub!');
-        window.history.replaceState({}, document.title, window.location.pathname);
+        await new Promise(resolve => setTimeout(resolve, 100));
         
-        initializeAuthUI();
-        await fetchUserRepositories();
+        if (isAuthenticated()) {
+            notificationSystem.success('Successfully connected to GitHub!');
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            initializeAuthUI();
+            await fetchUserRepositories();
+        } else {
+            notificationSystem.error('Authentication completed but session not found');
+            initializeAuthUI();
+        }
     } else if (isAuthenticated()) {
         // User has existing valid session
         initializeAuthUI();
         await fetchUserRepositories();
+    } else {
+        initializeAuthUI();
     }
 }
 
@@ -101,7 +111,6 @@ function initiateGitHubOAuth() {
     const initiateUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.INITIATE}`;
     window.location.href = initiateUrl;
 }
-
 
 
 // REPOSITORY FETCHING
