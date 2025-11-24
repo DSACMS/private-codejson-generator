@@ -238,9 +238,10 @@ module "apigw" {
   protocol_type = "HTTP"
 
   cors_configuration = {
-    allow_headers = ["content-type", "x-amz-date", "authorization", "x-api-key", "x-amz-security-token", "x-amz-user-agent"]
-    allow_methods = ["*"]
-    allow_origins = [var.frontend_url]
+    allow_headers     = ["content-type", "x-amz-date", "x-api-key", "x-amz-security-token"]
+    allow_methods     = ["GET", "POST", "OPTIONS", "DELETE"]
+    allow_origins     = [var.frontend_url] 
+    allow_credentials = true 
   }
 
   create_domain_name = false

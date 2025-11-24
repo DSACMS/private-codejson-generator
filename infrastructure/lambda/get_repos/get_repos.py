@@ -11,22 +11,24 @@ cipher = Fernet(os.environ['ENCRYPTION_KEY'].encode())
 
 def lambda_handler(event, context):
     try:
-        headers = event.get('headers', {})
-        authorization_header = headers.get('Authorization') or headers.get('authorization')
+        cookies = event.get('cookies', [])
+        session_token = None
+        
+        for cookie in cookies:
+            if cookie.startswith('session='):
+                session_token = cookie.split('=', 1)[1]
 
-        session_token: str = None
-        encrypted_db_token: str = None
-        github_token: str = None
-
-        if authorization_header and authorization_header.startswith('Bearer '):
-            session_token = authorization_header.split(' ')[1]
-        else:
-            return error_response('Missing session token', 400)
-
+                if ';' in session_token:
+                    session_token = session_token.split(';')[0]
+                break
+        
+        if not session_token:
+            return error_response('Missing or invalid session', 401)
+        
         try:
             response = sessions_table.get_item(Key={'sessionToken': session_token})
             if 'Item' not in response:
-                return error_response('Invalid session token', 403)
+                return error_response('Invalid or expired session', 403)
             
             encrypted_db_token = response['Item'].get('encryptedGithubToken')
     
@@ -51,35 +53,31 @@ def lambda_handler(event, context):
         )
 
         if endpoint_response.status_code != 200:
-            print(authorization_header)
-            print(session_token)
-            return error_response('Failed to get repos from Github', endpoint_response.status_code)
-        else:
-            repos = endpoint_response.json()
-            print(repos)
+            return error_response('Failed to fetch repositories from GitHub', endpoint_response.status_code)
+        
+        repos = endpoint_response.json()
 
-            return {
-                'statusCode': 200,
-                'headers': {
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*"
-                },
-                'body': json.dumps(repos)
-            }
+        return {
+            'statusCode': 200,
+            'headers': {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": os.environ.get('FRONTEND_URL', '*'),
+                "Access-Control-Allow-Credentials": "true" 
+            },
+            'body': json.dumps(repos)
+        }
 
     except Exception as e:
         print(f"Error in oauth_callback: {str(e)}")
         return error_response('Internal server error', 500)
 
 def error_response(message, status_code):
-    """Helper function to return error responses"""
-    frontend_url = os.environ.get('FRONTEND_URL', '/')
-    error_url = f"{frontend_url}?error={message}"
-    
     return {
         'statusCode': status_code,
         'headers': {
-            'Location': error_url
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': os.environ.get('FRONTEND_URL', '*'),
+            'Access-Control-Allow-Credentials': 'true'
         },
-        'body': ''
+        'body': json.dumps({'error': message})
     }

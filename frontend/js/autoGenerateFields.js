@@ -67,50 +67,33 @@ const API_CONFIG = {
     }
 };
 
-const AUTH_STORAGE_KEY = 'github_oauth_session';
-
-function getAuthToken() {
-    return localStorage.getItem(AUTH_STORAGE_KEY);
-}
-
-function setAuthToken(token) {
-    localStorage.setItem(AUTH_STORAGE_KEY, token);
-}
-
-function clearAuthToken() {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-}
-
 function isAuthenticated() {
-    return !!getAuthToken();
+    return document.cookie.includes('authenticated=true');
 }
 
 
 // OAUTH FLOW HANDLING
 async function handleOAuthCallback() {
     const urlParams = new URLSearchParams(window.location.search);
-    const sessionToken = urlParams.get('session');
+    const error = urlParams.get('error');
 
-    console.log('Session token from URL:', sessionToken);
+    if (error) {
+        notificationSystem.error(`Authentication failed: ${error}`);
+        return;
+    }
 
-    try {
-        if (sessionToken) {
-            setAuthToken(sessionToken);
-            notificationSystem.success('Successfully connected to GitHub!');
-            window.history.replaceState({}, document.title, window.location.pathname);
-            
-            initializeAuthUI();
-            await fetchUserRepositories();
-        } else if (getAuthToken()) {
-            console.log("getting auth token")
-            notificationSystem.success('Successfully connected to GitHub!');
-
-            initializeAuthUI();
-            await fetchUserRepositories();
-        }
-    } catch (error) {
-        console.error('OAuth callback error:', error);
-        notificationSystem.error(error.message);
+    const justAuthenticated = document.referrer.includes('github.com');
+    
+    if (justAuthenticated) {
+        notificationSystem.success('Successfully connected to GitHub!');
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        initializeAuthUI();
+        await fetchUserRepositories();
+    } else if (isAuthenticated()) {
+        // User has existing valid session
+        initializeAuthUI();
+        await fetchUserRepositories();
     }
 }
 
@@ -119,32 +102,22 @@ function initiateGitHubOAuth() {
     window.location.href = initiateUrl;
 }
 
-function disconnectGitHub() {
-    clearAuthToken();
-    notificationSystem.success('Disconnected from GitHub');
-    initializeAuthUI();
-}
 
 
 // REPOSITORY FETCHING
 async function fetchUserRepositories() {
-    const sessionToken = getAuthToken();
-    
-    if (!sessionToken) {
-        console.error('No session token available');
-        return;
-    }
-
     try {
         const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GET_REPOS}`, {
+            method: 'GET',
+            credentials: 'include',
             headers: {
-                'Authorization': `Bearer ${sessionToken}`,
                 'Content-Type': 'application/json'
             }
         });
 
         if (!response.ok) {
-            throw new Error('Failed to fetch repositories');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch repositories');
         }
 
         const data = await response.json();
@@ -211,7 +184,6 @@ function initializeAuthUI() {
 
 // API CALLS
 async function getRepoInformationAuth(repoInfo) {
-    const sessionToken = getAuthToken();
     const baseURL = "https://api.github.com/repos/";
     const endpoint = `${baseURL}${repoInfo.organization}/${repoInfo.repository}`;
 
@@ -219,10 +191,6 @@ async function getRepoInformationAuth(repoInfo) {
         const headers = {
             'Accept': 'application/vnd.github.v3+json'
         };
-
-        if (sessionToken) {
-            headers['Authorization'] = `Bearer ${sessionToken}`;
-        }
         
         const response = await fetch(endpoint, { headers });
 
@@ -238,17 +206,12 @@ async function getRepoInformationAuth(repoInfo) {
 }
 
 async function getRepoLanguagesAuth(repoInfo) {
-    const sessionToken = getAuthToken();
     const endpoint = `https://api.github.com/repos/${repoInfo.organization}/${repoInfo.repository}/languages`;
 
     try {
         const headers = {
             'Accept': 'application/vnd.github.v3+json'
         };
-
-        if (sessionToken) {
-            headers['Authorization'] = `Bearer ${sessionToken}`;
-        }
         
         const response = await fetch(endpoint, { headers });
 

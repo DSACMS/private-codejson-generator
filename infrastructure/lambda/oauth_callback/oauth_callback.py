@@ -71,12 +71,13 @@ def lambda_handler(event, context):
         )
         
         frontend_url = os.environ['FRONTEND_URL']
-        redirect_url = f"{frontend_url}?session={session_token}"
+        cookie_header = f'session={session_token}; HttpOnly; Secure; SameSite=Lax; Max-Age=3600; Path=/'
         
         return {
             'statusCode': 302,
             'headers': {
-                'Location': redirect_url
+                'Location': frontend_url,
+                'Set-Cookie': cookie_header
             },
             'body': ''
         }
@@ -86,7 +87,6 @@ def lambda_handler(event, context):
         return error_response('Internal server error', 500)
 
 def error_response(message, status_code):
-    """Helper function to return error responses"""
     frontend_url = os.environ.get('FRONTEND_URL', '/')
     error_url = f"{frontend_url}?error={message}"
     
