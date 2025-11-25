@@ -51,8 +51,6 @@ def lambda_handler(event, context):
         )
 
         if endpoint_response.status_code != 200:
-            print(authorization_header)
-            print(session_token)
             return error_response('Failed to get repos from Github', endpoint_response.status_code)
         else:
             repos = endpoint_response.json()

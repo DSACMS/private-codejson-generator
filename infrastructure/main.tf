@@ -239,8 +239,8 @@ module "apigw" {
 
   cors_configuration = {
     allow_headers = ["content-type", "x-amz-date", "authorization", "x-api-key", "x-amz-security-token", "x-amz-user-agent"]
-    allow_methods = ["*"]
-    allow_origins = [var.frontend_url]
+    allow_methods = ["GET", "POST", "OPTIONS"]
+    allow_origins = ["https://dsacms.github.io"]
   }
 
   create_domain_name = false
