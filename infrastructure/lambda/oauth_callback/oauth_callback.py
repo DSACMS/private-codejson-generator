@@ -59,7 +59,7 @@ def lambda_handler(event, context):
         
         session_token = str(uuid.uuid4())
         
-        ttl = int(time.time()) + 3600  # 1 hour
+        ttl = int(time.time()) + 1800  # 30 minutes
         
         sessions_table.put_item(
             Item={
