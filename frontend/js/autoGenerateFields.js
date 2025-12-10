@@ -97,9 +97,13 @@ function isAuthenticated() {
 
 // OAUTH FLOW HANDLING
 async function handleOAuthCallback() {
+    console.log('handleOAuthCallback started');
+    
     const urlParams = new URLSearchParams(window.location.search);
     const authSuccess = urlParams.get('auth');
     const error = urlParams.get('error');
+
+    console.log('URL params:', { authSuccess, error });
 
     if (error) {
         notificationSystem.error(error);
@@ -112,7 +116,12 @@ async function handleOAuthCallback() {
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
+    console.log('About to call checkAuthStatus');
+    
+    // Check auth status from server
     isAuthenticatedState = await checkAuthStatus();
+    
+    console.log('checkAuthStatus returned:', isAuthenticatedState);
     
     initializeAuthUI();
     
