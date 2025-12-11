@@ -60,7 +60,7 @@ def lambda_handler(event, context):
                 'statusCode': 200,
                 'headers': {
                     "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*"
+                    "Access-Control-Allow-Origin": "https://dsacms.github.io"
                 },
                 'body': json.dumps(repos)
             }
