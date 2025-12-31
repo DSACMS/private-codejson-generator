@@ -1,5 +1,5 @@
 > [!IMPORTANT]
-> This project was geared towards a learning experience and is not meant to be used due to security concerns. To learn more about why these security concerns, visit [SECURITY_CONSIDERATIONS.md](SECURITY_CONSIDERATIONS.md)
+> This project was geared towards a learning experience and is not meant to be used due to security concerns. To learn more about why these security concerns, visit [SECURITY_CONCERNS.md](SECURITY_CONCERNS.md)
 
 
 # private-codejson-generator
