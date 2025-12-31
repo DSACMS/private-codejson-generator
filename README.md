@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+> This project was geared towards a learning experience and is not meant to be used due to security concerns. To learn more about why these security concerns, visit [SECURITY_CONSIDERATIONS.md](SECURITY_CONCERNS.md)
+
+
 # private-codejson-generator
 
 Form to generate a CMS code.json with OAuth support to auto-generate from private repositories.
