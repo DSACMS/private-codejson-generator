@@ -1,7 +1,7 @@
 {
-  "name": "codejson-generator",
+  "name": "private-codejson-generator",
   "version": "",
-  "description": "Form to generate code.json",
+  "description": "Form to generate code.json from private and public repos",
   "longDescription": "A web form where project teams fill out information about their project and creates a completed code.json to add to repositories as part of SHARE IT Act compliance.",
   "status": "Production",
   "permissions": {
@@ -11,11 +11,13 @@
         "URL": "https://github.com/DSACMS/codejson-generator/blob/main/LICENSE"
       }
     ],
-    "usageType": ["openSource"],
+    "usageType": [
+      "openSource"
+    ],
     "exemptionText": ""
   },
   "organization": "Centers for Medicare & Medicaid Services",
-  "repositoryURL": "https://github.com/DSACMS/codejson-generator",
+  "repositoryURL": "https://github.com/DSACMS/private-codejson-generator",
   "repositoryHost": "github.com/DSACMS",
   "repositoryVisibility": "public",
   "homepageURL": "https://dsacms.github.io/codejson-generator/",
@@ -23,9 +25,9 @@
   "disclaimerURL": "",
   "disclaimerText": "",
   "vcs": "git",
-  "laborHours": 4172,
+  "laborHours": 16999,
   "reuseFrequency": {
-    "forks": 7,
+    "forks": 0,
     "clones": 0
   },
   "platforms": [
@@ -38,8 +40,12 @@
   ],
   "softwareType": "standalone/web",
   "languages": [
+    "Python",
+    "C",
     "JavaScript",
     "HTML",
+    "HCL",
+    "Shell",
     "CSS"
   ],
   "maintenance": "internal",
@@ -49,9 +55,9 @@
   "reusedCode": [],
   "partners": [],
   "date": {
-    "created": "2024-11-22T16:30:29Z",
-    "lastModified": "2025-10-07T16:56:24Z",
-    "metadataLastUpdated": "2025-10-30T20:35:02.333Z"
+    "created": "2025-11-13T20:38:04Z",
+    "lastModified": "2026-01-02T15:42:45Z",
+    "metadataLastUpdated": "2026-03-01T02:07:13.590Z"
   },
   "tags": [
     "dsacms-tier3"
