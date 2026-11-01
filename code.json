@@ -11,11 +11,13 @@
         "URL": "https://github.com/DSACMS/codejson-generator/blob/main/LICENSE"
       }
     ],
-    "usageType": ["openSource"],
+    "usageType": [
+      "openSource"
+    ],
     "exemptionText": ""
   },
   "organization": "Centers for Medicare & Medicaid Services",
-  "repositoryURL": "https://github.com/DSACMS/codejson-generator",
+  "repositoryURL": "https://github.com/DSACMS/private-codejson-generator",
   "repositoryHost": "github.com/DSACMS",
   "repositoryVisibility": "public",
   "homepageURL": "https://dsacms.github.io/codejson-generator/",
@@ -23,7 +25,7 @@
   "disclaimerURL": "",
   "disclaimerText": "",
   "vcs": "git",
-  "laborHours": 4172,
+  "laborHours": 16999,
   "reuseFrequency": {
     "forks": 7,
     "clones": 0
@@ -46,12 +48,17 @@
   "contractNumber": [],
   "SBOM": "https://github.com/DSACMS/codejson-generator/network/dependencies",
   "relatedCode": [],
-  "reusedCode": [],
+  "reusedCode": [
+    {
+      "name": "DSACMS/codejson-generator",
+      "URL": "https://github.com/DSACMS/codejson-generator"
+    }
+  ],
   "partners": [],
   "date": {
-    "created": "2024-11-22T16:30:29Z",
-    "lastModified": "2025-10-07T16:56:24Z",
-    "metadataLastUpdated": "2025-10-30T20:35:02.333Z"
+    "created": "2025-11-13T20:38:04Z",
+    "lastModified": "2026-01-02T15:42:45Z",
+    "metadataLastUpdated": "2026-11-01T04:21:13.904Z"
   },
   "tags": [
     "dsacms-tier3"
